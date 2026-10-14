@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Тактична дошка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0b3d1a; color: #fff; user-select: none; touch-action: none; }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  #header {
+    padding: 8px 12px; background: #08270f; display: flex;
+    align-items: center; justify-content: space-between;
+    font-size: 15px; font-weight: 600;
+  }
+  #header .title { color: #7ee787; }
+  #field-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 6px; overflow: hidden;
+  }
+  #field {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    height: 100%;
+    max-width: 100%;
+    background: #1a7a3e url("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Futsal_pitch.svg/400px-Futsal_pitch.svg.png") center/100% 100% no-repeat;
+    border: 2px solid #000;
+    border-radius: 6px;
+    background-blend-mode: multiply;
+    overflow: hidden;
+  }
+  .piece {
+    position: absolute;
+    width: 8.5%; height: 5.6%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid #000;
+    cursor: grab;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #000;
+    box-shadow: 0 2px 4px rgba(0,0,0,.5);
+    transition: box-shadow .15s;
+    touch-action: none;
+  }
+  .piece:active { cursor: grabbing; box-shadow: 0 4px 10px rgba(0,0,0,.8); }
+  .piece.home   { background: #2b7fff; }
+  .piece.away   { background: #ff4444; }
+  .piece.gk     { background: #ffd700; }
+  .piece.ball   { background: #ffffff; border-color: #000; width: 6.5%; height: 4.3%; font-size: 10px; }
+  .piece.animated { transition: left .6s ease, top .6s ease; }
+  #controls {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 10px 8px 14px;
+    background: #08270f;
+  }
+  #controls button {
+    background: #124d29; color: #fff; border: 1px solid #2c7a4b;
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    min-width: 54px;
+  }
+  #controls button:disabled { opacity: .35; cursor: default; }
+  #controls button:active:not(:disabled) { background: #1a6b39; }
+  #controls .save { background: #b8860b; border-color: #d4a017; }
+  #step-indicator { font-size: 13px; color: #9be49b; min-width: 60px; text-align: center; }
+  #saved-list { padding: 12px; overflow-y: auto; flex: 1; }
+  .saved-item {
+    background: #124d29; border: 1px solid #2c7a4b; border-radius: 10px;
+    padding: 12px; margin-bottom: 10px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .saved-item .name { font-size: 15px; font-weight: 600; }
+  .saved-item .meta { font-size: 12px; color: #9be49b; margin-top: 2px; }
+  .saved-item button {
+    background: #b8860b; border: none; color: #fff;
+    border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer;
+  }
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #0e3a1c; padding: 20px; border-radius: 14px;
+    width: 84%; max-width: 340px; text-align: center;
+  }
+  .modal h3 { margin: 0 0 14px; font-size: 17px; }
+  .modal input {
+    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2c7a4b;
+    background: #08270f; color: #fff; font-size: 15px; margin-bottom: 12px;
+  }
+  .modal .row { display: flex; gap: 8px; }
+  .modal button {
+    flex: 1; padding: 10px; border-radius: 8px; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .modal .ok { background: #1a6b39; color: #fff; }
+  .modal .cancel { background: #4a4a4a; color: #fff; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <span class="title">🎯 ТАКТИЧНА ДОШКА</span>
+    <span id="view-switch">
+      <button id="btn-view-saved" style="background:none;border:1px solid #2c7a4b;color:#fff;border-radius:8px;padding:4px 10px;font-size:13px;">Збережене</button>
+    </span>
+  </div>
+
+  <div id="board-view">
+    <div id="field-wrap">
+      <div id="field"></div>
+    </div>
+    <div id="controls">
+      <button id="btn-back" title="Крок назад">⏪</button>
+      <button id="btn-play" title="Відтворити">▶</button>
+      <button id="btn-fwd"  title="Крок вперед">⏩</button>
+      <span id="step-indicator">0 / 0</span>
+      <button id="btn-save" class="save" title="Зберегти">💾</button>
+      <button id="btn-close" title="Назад" style="background:#4a4a4a;border-color:#666;">⬅️</button>
+    </div>
+  </div>
+
+  <div id="saved-view" class="hidden">
+    <div id="saved-list"></div>
+    <div id="controls">
+      <button id="btn-back-board" style="background:#4a4a4a;border-color:#666;">⬅️ Назад до дошки</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="save-modal" class="modal-bg">
+  <div class="modal">
+    <h3>💾 Зберегти комбінацію</h3>
+    <input id="save-name" type="text" placeholder="Назва комбінації" maxlength="60">
+    <div class="row">
+      <button class="cancel" id="save-cancel">Скасувати</button>
+      <button class="ok" id="save-ok">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const INITIAL = [
+  { id: "h-gk",  team: "gk",   label: "GK", x: 50, y: 92 },
+  { id: "h-1",   team: "home", label: "1",  x: 22, y: 75 },
+  { id: "h-2",   team: "home", label: "2",  x: 78, y: 75 },
+  { id: "h-3",   team: "home", label: "3",  x: 22, y: 58 },
+  { id: "h-4",   team: "home", label: "4",  x: 78, y: 58 },
+  { id: "a-gk",  team: "gk",   label: "GK", x: 50, y: 8  },
+  { id: "a-1",   team: "away", label: "1",  x: 22, y: 25 },
+  { id: "a-2",   team: "away", label: "2",  x: 78, y: 25 },
+  { id: "a-3",   team: "away", label: "3",  x: 22, y: 42 },
+  { id: "a-4",   team: "away", label: "4",  x: 78, y: 42 },
+  { id: "ball",  team: "ball", label: "⚽", x: 50, y: 50 },
+];
+
+let pieces = [];
+let frames = [];
+let currentFrame = 0;
+let isAnimating = false;
+
+const field = document.getElementById("field");
+const stepInd = document.getElementById("step-indicator");
+const btnBack = document.getElementById("btn-back");
+const btnFwd  = document.getElementById("btn-fwd");
+const btnPlay = document.getElementById("btn-play");
+
+function render() {
+  field.innerHTML = "";
+  pieces.forEach(p => {
+    const el = document.createElement("div");
+    el.className = "piece " + p.team;
+    el.dataset.id = p.id;
+    el.style.left = p.x + "%";
+    el.style.top  = p.y + "%";
+    el.textContent = p.label;
+    field.appendChild(el);
+    attachDrag(el, p);
+  });
+  updateControls();
+}
+
+function clonePieces(src) {
+  return src.map(p => ({ ...p }));
+}
+
+function attachDrag(el, piece) {
+  let dragging = false;
+  let startX, startY, startPX, startPY;
+  let moved = false;
+
+  function pointerDown(e) {
+    if (isAnimating) return;
+    e.preventDefault();
+    dragging = true; moved = false;
+    const pt = getPoint(e);
+    startX = pt.x; startY = pt.y;
+    startPX = piece.x; startPY = piece.y;
+    el.style.zIndex = 999;
+  }
+
+  function pointerMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pt = getPoint(e);
+    const rect = field.getBoundingClientRect();
+    const dx = ((pt.x - startX) / rect.width) * 100;
+    const dy = ((pt.y - startY) / rect.height) * 100;
+    if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) moved = true;
+    let nx = clamp(startPX + dx, 3, 97);
+    let ny = clamp(startPY + dy, 2, 98);
+    piece.x = nx; piece.y = ny;
+    el.style.left = nx + "%";
+    el.style.top  = ny + "%";
+  }
+
+  function pointerUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    el.style.zIndex = "";
+    if (moved) {
+      saveCurrentFrame();
+    }
+  }
+
+  el.addEventListener("mousedown", pointerDown);
+  el.addEventListener("touchstart", pointerDown, { passive: false });
+  document.addEventListener("mousemove", pointerMove);
+  document.addEventListener("touchmove", pointerMove, { passive: false });
+  document.addEventListener("mouseup", pointerUp);
+  document.addEventListener("touchend", pointerUp);
+}
+
+function getPoint(e) {
+  if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function saveCurrentFrame() {
+  frames = frames.slice(0, currentFrame + 1);
+  frames.push(clonePieces(pieces));
+  currentFrame = frames.length - 1;
+  updateControls();
+}
+
+function gotoFrame(idx, animate = false) {
+  if (idx < 0 || idx >= frames.length) return;
+  currentFrame = idx;
+  const target = frames[idx];
+
+  if (!animate) {
+    pieces = clonePieces(target);
+    render();
+    return;
+  }
+
+  isAnimating = true;
+  const els = {};
+  field.querySelectorAll(".piece").forEach(el => { els[el.dataset.id] = el; });
+
+  target.forEach(t => {
+    const el = els[t.id];
+    if (!el) return;
+    el.classList.add("animated");
+    el.style.left = t.x + "%";
+    el.style.top  = t.y + "%";
+  });
+
+  setTimeout(() => {
+    pieces = clonePieces(target);
+    render();
+    isAnimating = false;
+  }, 650);
+}
+
+function updateControls() {
+  stepInd.textContent = (frames.length ? currentFrame + 1 : 0) + " / " + frames.length;
+  btnBack.disabled = currentFrame <= 0;
+  btnFwd.disabled  = currentFrame >= frames.length - 1;
+  btnPlay.disabled = frames.length < 2;
+}
+
+btnBack.onclick = () => gotoFrame(currentFrame - 1, false);
+btnFwd.onclick  = () => {
+  if (currentFrame < frames.length - 1) {
+    gotoFrame(currentFrame + 1, false);
+  } else {
+    frames.push(clonePieces(pieces));
+    currentFrame = frames.length - 1;
+    updateControls();
+  }
+};
+
+btnPlay.onclick = async () => {
+  if (frames.length < 2 || isAnimating) return;
+  gotoFrame(0, false);
+  await sleep(200);
+  for (let i = 1; i < frames.length; i++) {
+    gotoFrame(i, true);
+    await sleep(750);
+  }
+};
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+const saveModal = document.getElementById("save-modal");
+const saveName  = document.getElementById("save-name");
+
+document.getElementById("btn-save").onclick = () => {
+  if (frames.length === 0) { alert("Спочатку щось намалюйте"); return; }
+  saveName.value = "";
+  saveModal.classList.add("show");
+  saveName.focus();
+};
+document.getElementById("save-cancel").onclick = () => saveModal.classList.remove("show");
+
+document.getElementById("save-ok").onclick = () => {
+  const name = saveName.value.trim();
+  if (!name) { alert("Введіть назву"); return; }
+  const data = {
+    name,
+    frames: frames,
+    initial: INITIAL,
+    ts: Date.now(),
+  };
+  saveLocal(data);
+  sendToBot(data);
+  saveModal.classList.remove("show");
+  alert("✅ Збережено: " + name);
+};
+
+function saveLocal(item) {
+  const key = "tactics_saved";
+  const list = JSON.parse(localStorage.getItem(key) || "[]");
+  list.push(item);
+  localStorage.setItem(key, JSON.stringify(list));
+}
+
+function loadLocal() {
+  return JSON.parse(localStorage.getItem("tactics_saved") || "[]");
+}
+
+function sendToBot(item) {
+  if (window.Telegram && Telegram.WebApp) {
+    try {
+      Telegram.WebApp.sendData(JSON.stringify({
+        action: "save_tactic",
+        name: item.name,
+        frames_count: item.frames.length,
+        frames: item.frames,
+      }));
+    } catch (e) {
+      console.warn("sendData error:", e);
+    }
+  }
+}
+
+const boardView = document.getElementById("board-view");
+const savedView = document.getElementById("saved-view");
+const savedList = document.getElementById("saved-list");
+
+document.getElementById("btn-view-saved").onclick = () => {
+  boardView.classList.add("hidden");
+  savedView.classList.remove("hidden");
+  renderSaved();
+};
+document.getElementById("btn-back-board").onclick = () => {
+  savedView.classList.add("hidden");
+  boardView.classList.remove("hidden");
+};
+
+function renderSaved() {
+  const list = loadLocal();
+  savedList.innerHTML = "";
+  if (!list.length) {
+    savedList.innerHTML = '<div style="text-align:center;color:#9be49b;padding:30px 0;">Поки немає збережених комбінацій</div>';
+    return;
+  }
+  list.slice().reverse().forEach((item) => {
+    const div = document.createElement("div");
+    div.className = "saved-item";
+    const date = new Date(item.ts).toLocaleString("uk-UA");
+    div.innerHTML = '<div><div class="name">' + escapeHtml(item.name) + '</div><div class="meta">Кадрів: ' + item.frames.length + ' · ' + date + '</div></div><button>▶ Відкрити</button>';
+    div.querySelector("button").onclick = () => loadSaved(item);
+    savedList.appendChild(div);
+  });
+}
+
+function loadSaved(item) {
+  frames = item.frames.map(f => f.map(p => ({ ...p })));
+  currentFrame = 0;
+  pieces = clonePieces(frames[0]);
+  savedView.classList.add("hidden");
+  boardView.classList.remove("hidden");
+  render();
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  document.getElementById("btn-close").onclick = () => Telegram.WebApp.close();
+} else {
+  document.getElementById("btn-close").onclick = () => history.back();
+}
+
+pieces = clonePieces(INITIAL);
+frames = [clonePieces(INITIAL)];
+currentFrame = 0;
+render();
+</script>
+</body>
+</html>
