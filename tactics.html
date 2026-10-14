@@ -6,142 +6,145 @@
 <title>Тактична дошка</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0b3d1a; color: #fff; user-select: none; touch-action: none; }
-  #app { display: flex; flex-direction: column; height: 100vh; }
-  #header {
-    padding: 8px 12px; background: #08270f; display: flex;
-    align-items: center; justify-content: space-between;
-    font-size: 15px; font-weight: 600;
-  }
-  #header .title { color: #7ee787; }
-  #field-wrap {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 6px; overflow: hidden;
-  }
-  #field {
-    position: relative;
-    aspect-ratio: 2 / 3;
-    height: 100%;
-    max-width: 100%;
-    background-color: #a8dadc;
-    background-image: url("field.svg");
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    background-position: center;
-    border: 2px solid #000;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .piece {
-    position: absolute;
-    width: 8.5%; height: 5.6%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 2px solid #000;
-    cursor: grab;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: #000;
-    box-shadow: 0 2px 4px rgba(0,0,0,.5);
-    transition: box-shadow .15s;
-    touch-action: none;
-  }
-  .piece:active { cursor: grabbing; box-shadow: 0 4px 10px rgba(0,0,0,.8); }
-  .piece.home   { background: #2b7fff; }
-  .piece.away   { background: #ff4444; }
-  .piece.gk     { background: #ffd700; }
-  .piece.ball   { background: #ffffff; border-color: #000; width: 6.5%; height: 4.3%; font-size: 10px; }
-  .piece.animated { transition: left .6s ease, top .6s ease; }
-  #controls {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 10px 8px 14px;
-    background: #08270f;
-  }
-  #controls button {
-    background: #124d29; color: #fff; border: 1px solid #2c7a4b;
-    border-radius: 10px; padding: 10px 16px;
-    font-size: 16px; font-weight: 600; cursor: pointer;
-    min-width: 54px;
-  }
-  #controls button:disabled { opacity: .35; cursor: default; }
-  #controls button:active:not(:disabled) { background: #1a6b39; }
-  #controls .save { background: #b8860b; border-color: #d4a017; }
-  #step-indicator { font-size: 13px; color: #9be49b; min-width: 60px; text-align: center; }
-  #saved-list { padding: 12px; overflow-y: auto; flex: 1; }
-  .saved-item {
-    background: #124d29; border: 1px solid #2c7a4b; border-radius: 10px;
-    padding: 12px; margin-bottom: 10px; display: flex;
-    justify-content: space-between; align-items: center;
-  }
-  .saved-item .name { font-size: 15px; font-weight: 600; }
-  .saved-item .meta { font-size: 12px; color: #9be49b; margin-top: 2px; }
-  .saved-item button {
-    background: #b8860b; border: none; color: #fff;
-    border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer;
-  }
-  .modal-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,.7);
-    display: none; align-items: center; justify-content: center; z-index: 100;
-  }
-  .modal-bg.show { display: flex; }
-  .modal {
-    background: #0e3a1c; padding: 20px; border-radius: 14px;
-    width: 84%; max-width: 340px; text-align: center;
-  }
-  .modal h3 { margin: 0 0 14px; font-size: 17px; }
-  .modal input {
-    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2c7a4b;
-    background: #08270f; color: #fff; font-size: 15px; margin-bottom: 12px;
-  }
-  .modal .row { display: flex; gap: 8px; }
-  .modal button {
-    flex: 1; padding: 10px; border-radius: 8px; border: none;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-  }
-  .modal .ok { background: #1a6b39; color: #fff; }
-  .modal .cancel { background: #4a4a4a; color: #fff; }
-  .hidden { display: none !important; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
+  font-family: Arial, sans-serif; background: #0b3d1a; color: #fff; }
+#header { padding: 8px 12px; background: #08270f;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 15px; font-weight: 600; }
+#header .title { color: #7ee787; }
+#btn-view-saved { background: none; border: 1px solid #2c7a4b; color: #fff;
+  border-radius: 8px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+
+#board-view { position: absolute; top: 42px; left: 0; right: 0; bottom: 68px; }
+#field { position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  height: calc(100% - 12px); width: auto; aspect-ratio: 2 / 3;
+  background-color: #a8dadc;
+  background-image: url("field.svg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 2px solid #000; border-radius: 6px;
+  overflow: visible; }
+
+.piece { position: absolute; width: 8%; height: 5.3%;
+  margin-left: -4%; margin-top: -2.65%;
+  border-radius: 50%; border: 2px solid #000;
+  cursor: grab; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+  touch-action: none; user-select: none; z-index: 10; }
+.piece:active { cursor: grabbing; z-index: 999; }
+
+.piece.home    { background: #facc15; }
+.piece.gk-home { background: #2563eb; }
+.piece.away    { background: #dc2626; }
+.piece.gk-away { background: #1a1a1a; border-color: #555; }
+
+.piece.ball {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0f0f0 45%, #c8c8c8 100%);
+  width: 6.5%; height: 4.3%;
+  margin-left: -3.25%; margin-top: -2.15%;
+  border: 2px solid #111;
+  border-radius: 50%;
+  z-index: 20;
+  box-shadow: 0 2px 5px rgba(0,0,0,.6), inset -2px -2px 4px rgba(0,0,0,.15);
+  overflow: hidden;
+}
+.piece.ball::before {
+  content: "";
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  background: #111;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+.piece.ball::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle 12% at 20% 20%, #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 80% 20%, #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 20% 80%, #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 80% 80%, #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 50% 5%,  #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 50% 95%, #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 5% 50%,  #111 100%, transparent 100%),
+    radial-gradient(circle 12% at 95% 50%, #111 100%, transparent 100%);
+  pointer-events: none;
+}
+
+/* АНІМАЦІЯ — повільніша */
+.piece.animated { transition: left 1.2s ease-in-out, top 1.2s ease-in-out; }
+
+#controls { position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+  padding: 10px; background: #08270f; }
+#controls button { background: #124d29; color: #fff; border: 1px solid #2c7a4b;
+  border-radius: 10px; padding: 10px 14px; font-size: 16px; cursor: pointer;
+  min-width: 50px; }
+#controls button:disabled { opacity: .35; }
+#controls .save { background: #b8860b; border-color: #d4a017; }
+#step-indicator { font-size: 18px; font-weight: bold; color: #9be49b;
+  min-width: 30px; text-align: center; }
+
+#saved-view { position: absolute; top: 42px; left: 0; right: 0; bottom: 68px;
+  overflow-y: auto; padding: 12px; display: none; }
+#saved-view.show { display: block; }
+.saved-item { background: #124d29; border: 1px solid #2c7a4b; border-radius: 10px;
+  padding: 12px; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center; }
+.saved-item .name { font-weight: bold; }
+.saved-item .meta { font-size: 12px; color: #9be49b; }
+.saved-item button { background: #b8860b; border: none; color: #fff;
+  border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+
+#save-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.7); display: none;
+  align-items: center; justify-content: center; z-index: 100; }
+#save-modal.show { display: flex; }
+.modal { background: #0e3a1c; padding: 20px; border-radius: 14px;
+  width: 84%; max-width: 340px; text-align: center; }
+.modal h3 { margin: 0 0 14px; }
+.modal input { width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid #2c7a4b; background: #08270f; color: #fff;
+  font-size: 15px; margin-bottom: 12px; }
+.modal .row { display: flex; gap: 8px; }
+.modal button { flex: 1; padding: 10px; border-radius: 8px; border: none;
+  font-size: 15px; font-weight: bold; cursor: pointer; }
+.modal .ok { background: #1a6b39; color: #fff; }
+.modal .cancel { background: #4a4a4a; color: #fff; }
 </style>
 </head>
 <body>
-<div id="app">
 
-  <div id="header">
-    <span class="title">🎯 ТАКТИЧНА ДОШКА</span>
-    <span id="view-switch">
-      <button id="btn-view-saved" style="background:none;border:1px solid #2c7a4b;color:#fff;border-radius:8px;padding:4px 10px;font-size:13px;">Збережене</button>
-    </span>
-  </div>
-
-  <div id="board-view">
-    <div id="field-wrap">
-      <div id="field"></div>
-    </div>
-    <div id="controls">
-      <button id="btn-back" title="Крок назад">⏪</button>
-      <button id="btn-play" title="Відтворити">▶</button>
-      <button id="btn-fwd"  title="Крок вперед">⏩</button>
-      <span id="step-indicator">0 / 0</span>
-      <button id="btn-save" class="save" title="Зберегти">💾</button>
-      <button id="btn-close" title="Назад" style="background:#4a4a4a;border-color:#666;">⬅️</button>
-    </div>
-  </div>
-
-  <div id="saved-view" class="hidden">
-    <div id="saved-list"></div>
-    <div id="controls">
-      <button id="btn-back-board" style="background:#4a4a4a;border-color:#666;">⬅️ Назад до дошки</button>
-    </div>
-  </div>
-
+<div id="header">
+  <span class="title">🎯 ТАКТИЧНА ДОШКА</span>
+  <button id="btn-view-saved">Збережене</button>
 </div>
 
-<div id="save-modal" class="modal-bg">
+<div id="board-view">
+  <div id="field"></div>
+</div>
+
+<div id="saved-view"></div>
+
+<div id="controls">
+  <button id="btn-back">⏪</button>
+  <button id="btn-play">▶</button>
+  <button id="btn-fwd">⏩</button>
+  <span id="step-indicator">1</span>
+  <button id="btn-save" class="save">💾</button>
+  <button id="btn-close" style="background:#4a4a4a;">⬅️</button>
+</div>
+
+<div id="save-modal">
   <div class="modal">
     <h3>💾 Зберегти комбінацію</h3>
-    <input id="save-name" type="text" placeholder="Назва комбінації" maxlength="60">
+    <input id="save-name" type="text" placeholder="Назва" maxlength="60">
     <div class="row">
       <button class="cancel" id="save-cancel">Скасувати</button>
       <button class="ok" id="save-ok">Зберегти</button>
@@ -150,278 +153,253 @@
 </div>
 
 <script>
-const INITIAL = [
-  { id: "h-gk",  team: "gk",   label: "GK", x: 50, y: 92 },
-  { id: "h-1",   team: "home", label: "1",  x: 22, y: 75 },
-  { id: "h-2",   team: "home", label: "2",  x: 78, y: 75 },
-  { id: "h-3",   team: "home", label: "3",  x: 22, y: 58 },
-  { id: "h-4",   team: "home", label: "4",  x: 78, y: 58 },
-  { id: "a-gk",  team: "gk",   label: "GK", x: 50, y: 8  },
-  { id: "a-1",   team: "away", label: "1",  x: 22, y: 25 },
-  { id: "a-2",   team: "away", label: "2",  x: 78, y: 25 },
-  { id: "a-3",   team: "away", label: "3",  x: 22, y: 42 },
-  { id: "a-4",   team: "away", label: "4",  x: 78, y: 42 },
-  { id: "ball",  team: "ball", label: "⚽", x: 50, y: 50 },
+var INITIAL = [
+  { id: "h-gk", team: "gk-home", x: 50, y: 92 },
+  { id: "h-1",  team: "home",    x: 22, y: 75 },
+  { id: "h-2",  team: "home",    x: 78, y: 75 },
+  { id: "h-3",  team: "home",    x: 22, y: 58 },
+  { id: "h-4",  team: "home",    x: 78, y: 58 },
+  { id: "a-gk", team: "gk-away", x: 50, y: 8  },
+  { id: "a-1",  team: "away",    x: 22, y: 25 },
+  { id: "a-2",  team: "away",    x: 78, y: 25 },
+  { id: "a-3",  team: "away",    x: 22, y: 42 },
+  { id: "a-4",  team: "away",    x: 78, y: 42 },
+  { id: "ball", team: "ball",    x: 50, y: 50 }
 ];
 
-let pieces = [];
-let frames = [];
-let currentFrame = 0;
-let isAnimating = false;
+var pieces = [];
+var frames = [];
+var currentFrame = 0;
+var isAnimating = false;
+var field = document.getElementById("field");
 
-const field = document.getElementById("field");
-const stepInd = document.getElementById("step-indicator");
-const btnBack = document.getElementById("btn-back");
-const btnFwd  = document.getElementById("btn-fwd");
-const btnPlay = document.getElementById("btn-play");
+// Тривалість анімації (мс) — має співпадати з transition у CSS
+var ANIM_DURATION = 1200;
+// Пауза між кадрами під час відтворення
+var PLAY_PAUSE = 1400;
 
 function render() {
   field.innerHTML = "";
-  pieces.forEach(p => {
-    const el = document.createElement("div");
+  for (var i = 0; i < pieces.length; i++) {
+    var p = pieces[i];
+    var el = document.createElement("div");
     el.className = "piece " + p.team;
-    el.dataset.id = p.id;
+    el.setAttribute("data-id", p.id);
     el.style.left = p.x + "%";
-    el.style.top  = p.y + "%";
-    el.textContent = p.label;
+    el.style.top = p.y + "%";
     field.appendChild(el);
-    attachDrag(el, p);
-  });
+    makeDraggable(el, p);
+  }
   updateControls();
 }
 
-function clonePieces(src) {
-  return src.map(p => ({ ...p }));
+function clone(src) {
+  var out = [];
+  for (var i = 0; i < src.length; i++) {
+    out.push({ id: src[i].id, team: src[i].team, x: src[i].x, y: src[i].y });
+  }
+  return out;
 }
 
-function attachDrag(el, piece) {
-  let dragging = false;
-  let startX, startY, startPX, startPY;
-  let moved = false;
+function makeDraggable(el, piece) {
+  var dragging = false, sx, sy, spx, spy, moved;
 
-  function pointerDown(e) {
+  function down(e) {
     if (isAnimating) return;
     e.preventDefault();
     dragging = true; moved = false;
-    const pt = getPoint(e);
-    startX = pt.x; startY = pt.y;
-    startPX = piece.x; startPY = piece.y;
-    el.style.zIndex = 999;
+    var pt = pos(e);
+    sx = pt.x; sy = pt.y;
+    spx = piece.x; spy = piece.y;
   }
-
-  function pointerMove(e) {
+  function move(e) {
     if (!dragging) return;
     e.preventDefault();
-    const pt = getPoint(e);
-    const rect = field.getBoundingClientRect();
-    const dx = ((pt.x - startX) / rect.width) * 100;
-    const dy = ((pt.y - startY) / rect.height) * 100;
+    var pt = pos(e);
+    var r = field.getBoundingClientRect();
+    var dx = ((pt.x - sx) / r.width) * 100;
+    var dy = ((pt.y - sy) / r.height) * 100;
     if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) moved = true;
-    let nx = clamp(startPX + dx, 3, 97);
-    let ny = clamp(startPY + dy, 2, 98);
+
+    var minX = 3, maxX = 97, minY = 2, maxY = 98;
+    if (piece.team === "ball") {
+      minX = -8; maxX = 108;
+      minY = -8; maxY = 108;
+    }
+
+    var nx = Math.max(minX, Math.min(maxX, spx + dx));
+    var ny = Math.max(minY, Math.min(maxY, spy + dy));
     piece.x = nx; piece.y = ny;
     el.style.left = nx + "%";
-    el.style.top  = ny + "%";
+    el.style.top = ny + "%";
   }
-
-  function pointerUp(e) {
+  function up() {
     if (!dragging) return;
     dragging = false;
-    el.style.zIndex = "";
-    if (moved) {
-      saveCurrentFrame();
-    }
+    if (moved) frames[currentFrame] = clone(pieces);
   }
 
-  el.addEventListener("mousedown", pointerDown);
-  el.addEventListener("touchstart", pointerDown, { passive: false });
-  document.addEventListener("mousemove", pointerMove);
-  document.addEventListener("touchmove", pointerMove, { passive: false });
-  document.addEventListener("mouseup", pointerUp);
-  document.addEventListener("touchend", pointerUp);
+  el.addEventListener("mousedown", down);
+  el.addEventListener("touchstart", down, { passive: false });
+  document.addEventListener("mousemove", move);
+  document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", up);
+  document.addEventListener("touchend", up);
 }
 
-function getPoint(e) {
+function pos(e) {
   if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
   if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
   return { x: e.clientX, y: e.clientY };
 }
 
-function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
-function saveCurrentFrame() {
-  frames = frames.slice(0, currentFrame + 1);
-  frames.push(clonePieces(pieces));
-  currentFrame = frames.length - 1;
-  updateControls();
-}
-
-function gotoFrame(idx, animate = false) {
+function goto(idx, animate) {
   if (idx < 0 || idx >= frames.length) return;
   currentFrame = idx;
-  const target = frames[idx];
-
+  var target = frames[idx];
   if (!animate) {
-    pieces = clonePieces(target);
+    pieces = clone(target);
     render();
     return;
   }
-
   isAnimating = true;
-  const els = {};
-  field.querySelectorAll(".piece").forEach(el => { els[el.dataset.id] = el; });
-
-  target.forEach(t => {
-    const el = els[t.id];
-    if (!el) return;
+  var nodes = field.querySelectorAll(".piece");
+  var map = {};
+  for (var i = 0; i < nodes.length; i++) map[nodes[i].getAttribute("data-id")] = nodes[i];
+  for (var j = 0; j < target.length; j++) {
+    var t = target[j];
+    var el = map[t.id];
+    if (!el) continue;
     el.classList.add("animated");
     el.style.left = t.x + "%";
-    el.style.top  = t.y + "%";
-  });
-
-  setTimeout(() => {
-    pieces = clonePieces(target);
+    el.style.top = t.y + "%";
+  }
+  setTimeout(function() {
+    pieces = clone(target);
     render();
     isAnimating = false;
-  }, 650);
+  }, ANIM_DURATION);
 }
 
 function updateControls() {
-  stepInd.textContent = (frames.length ? currentFrame + 1 : 0) + " / " + frames.length;
-  btnBack.disabled = currentFrame <= 0;
-  btnFwd.disabled  = currentFrame >= frames.length - 1;
-  btnPlay.disabled = frames.length < 2;
+  // Просто поточна цифра кадру
+  document.getElementById("step-indicator").textContent = currentFrame + 1;
+  document.getElementById("btn-back").disabled = currentFrame <= 0;
+  document.getElementById("btn-fwd").disabled = false;
+  document.getElementById("btn-play").disabled = frames.length < 2;
 }
 
-btnBack.onclick = () => gotoFrame(currentFrame - 1, false);
-btnFwd.onclick  = () => {
-  if (currentFrame < frames.length - 1) {
-    gotoFrame(currentFrame + 1, false);
-  } else {
-    frames.push(clonePieces(pieces));
-    currentFrame = frames.length - 1;
-    updateControls();
-  }
+document.getElementById("btn-back").onclick = function() {
+  if (currentFrame > 0) goto(currentFrame - 1, false);
 };
 
-btnPlay.onclick = async () => {
+document.getElementById("btn-fwd").onclick = function() {
+  frames[currentFrame] = clone(pieces);
+  frames.push(clone(pieces));
+  currentFrame = frames.length - 1;
+  updateControls();
+};
+
+document.getElementById("btn-play").onclick = function() {
   if (frames.length < 2 || isAnimating) return;
-  gotoFrame(0, false);
-  await sleep(200);
-  for (let i = 1; i < frames.length; i++) {
-    gotoFrame(i, true);
-    await sleep(750);
+  goto(0, false);
+  var i = 1;
+  function step() {
+    if (i >= frames.length) return;
+    goto(i, true);
+    i++;
+    setTimeout(step, PLAY_PAUSE);
   }
+  setTimeout(step, 300);
 };
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-const saveModal = document.getElementById("save-modal");
-const saveName  = document.getElementById("save-name");
-
-document.getElementById("btn-save").onclick = () => {
-  if (frames.length === 0) { alert("Спочатку щось намалюйте"); return; }
-  saveName.value = "";
-  saveModal.classList.add("show");
-  saveName.focus();
+document.getElementById("btn-save").onclick = function() {
+  document.getElementById("save-name").value = "";
+  document.getElementById("save-modal").classList.add("show");
+  document.getElementById("save-name").focus();
 };
-document.getElementById("save-cancel").onclick = () => saveModal.classList.remove("show");
-
-document.getElementById("save-ok").onclick = () => {
-  const name = saveName.value.trim();
+document.getElementById("save-cancel").onclick = function() {
+  document.getElementById("save-modal").classList.remove("show");
+};
+document.getElementById("save-ok").onclick = function() {
+  var name = document.getElementById("save-name").value.trim();
   if (!name) { alert("Введіть назву"); return; }
-  const data = {
-    name,
-    frames: frames,
-    initial: INITIAL,
-    ts: Date.now(),
-  };
-  saveLocal(data);
-  sendToBot(data);
-  saveModal.classList.remove("show");
-  alert("✅ Збережено: " + name);
-};
-
-function saveLocal(item) {
-  const key = "tactics_saved";
-  const list = JSON.parse(localStorage.getItem(key) || "[]");
+  var item = { name: name, frames: frames, ts: Date.now() };
+  var list = JSON.parse(localStorage.getItem("tactics_saved") || "[]");
   list.push(item);
-  localStorage.setItem(key, JSON.stringify(list));
-}
-
-function loadLocal() {
-  return JSON.parse(localStorage.getItem("tactics_saved") || "[]");
-}
-
-function sendToBot(item) {
-  if (window.Telegram && Telegram.WebApp) {
+  localStorage.setItem("tactics_saved", JSON.stringify(list));
+  if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
     try {
       Telegram.WebApp.sendData(JSON.stringify({
-        action: "save_tactic",
-        name: item.name,
-        frames_count: item.frames.length,
-        frames: item.frames,
+        action: "save_tactic", name: name,
+        frames_count: frames.length, frames: frames
       }));
-    } catch (e) {
-      console.warn("sendData error:", e);
-    }
+    } catch (e) {}
   }
-}
-
-const boardView = document.getElementById("board-view");
-const savedView = document.getElementById("saved-view");
-const savedList = document.getElementById("saved-list");
-
-document.getElementById("btn-view-saved").onclick = () => {
-  boardView.classList.add("hidden");
-  savedView.classList.remove("hidden");
-  renderSaved();
+  document.getElementById("save-modal").classList.remove("show");
+  alert("Збережено: " + name);
 };
-document.getElementById("btn-back-board").onclick = () => {
-  savedView.classList.add("hidden");
-  boardView.classList.remove("hidden");
+
+document.getElementById("btn-view-saved").onclick = function() {
+  var sv = document.getElementById("saved-view");
+  var bv = document.getElementById("board-view");
+  if (sv.classList.contains("show")) {
+    sv.classList.remove("show");
+    bv.style.display = "";
+    document.getElementById("btn-view-saved").textContent = "Збережене";
+  } else {
+    sv.classList.add("show");
+    bv.style.display = "none";
+    document.getElementById("btn-view-saved").textContent = "До дошки";
+    renderSaved();
+  }
 };
 
 function renderSaved() {
-  const list = loadLocal();
-  savedList.innerHTML = "";
+  var list = JSON.parse(localStorage.getItem("tactics_saved") || "[]");
+  var sv = document.getElementById("saved-view");
+  sv.innerHTML = "";
   if (!list.length) {
-    savedList.innerHTML = '<div style="text-align:center;color:#9be49b;padding:30px 0;">Поки немає збережених комбінацій</div>';
+    sv.innerHTML = '<div style="text-align:center;padding:30px;color:#9be49b;">Поки немає збережених комбінацій</div>';
     return;
   }
-  list.slice().reverse().forEach((item) => {
-    const div = document.createElement("div");
+  for (var i = list.length - 1; i >= 0; i--) {
+    var item = list[i];
+    var div = document.createElement("div");
     div.className = "saved-item";
-    const date = new Date(item.ts).toLocaleString("uk-UA");
-    div.innerHTML = '<div><div class="name">' + escapeHtml(item.name) + '</div><div class="meta">Кадрів: ' + item.frames.length + ' · ' + date + '</div></div><button>▶ Відкрити</button>';
-    div.querySelector("button").onclick = () => loadSaved(item);
-    savedList.appendChild(div);
-  });
-}
-
-function loadSaved(item) {
-  frames = item.frames.map(f => f.map(p => ({ ...p })));
-  currentFrame = 0;
-  pieces = clonePieces(frames[0]);
-  savedView.classList.add("hidden");
-  boardView.classList.remove("hidden");
-  render();
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    var date = new Date(item.ts).toLocaleString("uk-UA");
+    div.innerHTML = '<div><div class="name">' + item.name +
+      '</div><div class="meta">Кадрів: ' + item.frames.length + ' · ' + date +
+      '</div></div>';
+    var btn = document.createElement("button");
+    btn.textContent = "▶ Відкрити";
+    (function(it) {
+      btn.onclick = function() {
+        frames = [];
+        for (var k = 0; k < it.frames.length; k++) frames.push(clone(it.frames[k]));
+        currentFrame = 0;
+        pieces = clone(frames[0]);
+        document.getElementById("saved-view").classList.remove("show");
+        document.getElementById("board-view").style.display = "";
+        document.getElementById("btn-view-saved").textContent = "Збережене";
+        render();
+      };
+    })(item);
+    div.appendChild(btn);
+    sv.appendChild(div);
+  }
 }
 
 if (window.Telegram && Telegram.WebApp) {
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
-  document.getElementById("btn-close").onclick = () => Telegram.WebApp.close();
+  document.getElementById("btn-close").onclick = function() { Telegram.WebApp.close(); };
 } else {
-  document.getElementById("btn-close").onclick = () => history.back();
+  document.getElementById("btn-close").onclick = function() { history.back(); };
 }
 
-pieces = clonePieces(INITIAL);
-frames = [clonePieces(INITIAL)];
+pieces = clone(INITIAL);
+frames = [clone(INITIAL)];
 currentFrame = 0;
 render();
 </script>
