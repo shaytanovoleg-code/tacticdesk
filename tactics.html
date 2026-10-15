@@ -11,10 +11,12 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   font-family: Arial, sans-serif; background: #0a1929; color: #e3f2fd;
-  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+  position: fixed; width: 100%; }
 #header { padding: 8px 12px; background: #061321;
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 15px; font-weight: 600; color: #e3f2fd; flex-shrink: 0; }
+  font-size: 15px; font-weight: 600; color: #e3f2fd; flex-shrink: 0;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
 #header .title { color: #ffffff; font-weight: 900; letter-spacing: 1px;
   font-size: 16px; }
 #btn-view-saved { background: none; border: 1px solid #2196f3; color: #e3f2fd;
@@ -23,17 +25,17 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 #board-view { position: absolute; top: 42px; left: 0; right: 0;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
-/* Голуба зона з однаковими відступами з усіх боків */
 #field-wrap {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  height: calc(100% - 24px);
+  height: calc(100% - 28px);
+  width: auto;
   aspect-ratio: 2 / 3;
   padding: 14px;
   background: #a8dadc;
   border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px #42a5f5;
 }
 #field { position: relative; width: 100%; height: 100%;
   background-color: #a8dadc;
@@ -58,6 +60,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 .piece.away    { background: #dc2626; }
 .piece.gk-away { background: #1a1a1a; border-color: #555; }
 
+/* М'яч — біла куля з чорним п'ятикутником і плямами навколо */
 .piece.ball {
   width: 7%; height: 4.7%;
   margin-left: -3.5%; margin-top: -2.35%;
@@ -130,9 +133,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 
 #save-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,.7); display: none;
-  align-items: center; justify-content: center; z-index: 100;
-  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
-           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  align-items: center; justify-content: center; z-index: 100; }
 #save-modal.show { display: flex; }
 .modal { background: #0d2137; padding: 20px; border-radius: 14px;
   width: 84%; max-width: 340px; text-align: center;
@@ -314,17 +315,24 @@ function updateControls() {
   document.getElementById("step-indicator").textContent = currentFrame;
   document.getElementById("btn-back").disabled = currentFrame <= 0;
   document.getElementById("btn-fwd").disabled = false;
-  document.getElementById("btn-play").disabled = currentFrame < 1 || frames.length < 2;
+  document.getElementById("btn-play").disabled = frames.length < 2;
 }
 
+// ⏪ НАЗАД — видаляє поточний кадр і повертає на попередній
 document.getElementById("btn-back").onclick = function() {
   if (currentFrame <= 0) return;
-  if (frames.length > currentFrame + 1) {
-    frames = frames.slice(0, currentFrame + 1);
+  frames.splice(currentFrame, 1);
+  if (frames.length === 0) {
+    frames = [clone(INITIAL)];
+    currentFrame = 0;
+  } else {
+    currentFrame = Math.min(currentFrame, frames.length - 1);
   }
-  goto(currentFrame - 1, false);
+  pieces = clone(frames[currentFrame]);
+  render();
 };
 
+// ⏩ ВПЕРЕД — створює НОВИЙ кадр (копію поточного)
 document.getElementById("btn-fwd").onclick = function() {
   if (currentFrame < frames.length - 1) {
     frames = frames.slice(0, currentFrame + 1);
@@ -335,6 +343,7 @@ document.getElementById("btn-fwd").onclick = function() {
   updateControls();
 };
 
+// ▶ ПЛЕЙ — програє з кадру 1 до останнього, ЗУПИНЯЄТЬСЯ на останньому
 document.getElementById("btn-play").onclick = function() {
   if (isAnimating) return;
   var startIdx = 1;
@@ -346,7 +355,6 @@ document.getElementById("btn-play").onclick = function() {
 
   function step() {
     if (i > endIdx) {
-      setTimeout(function() { goto(startIdx, false); }, 400);
       return;
     }
     goto(i, true);
@@ -434,9 +442,14 @@ function renderSaved() {
 }
 
 if (window.Telegram && Telegram.WebApp) {
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-  document.getElementById("btn-close").onclick = function() { Telegram.WebApp.close(); };
+  var tg = Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  if (tg.requestFullscreen) { try { tg.requestFullscreen(); } catch (e) {} }
+  if (tg.setHeaderColor) tg.setHeaderColor("#061321");
+  if (tg.setBackgroundColor) tg.setBackgroundColor("#0a1929");
+  if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  document.getElementById("btn-close").onclick = function() { tg.close(); };
 } else {
   document.getElementById("btn-close").onclick = function() {
     if (history.length > 1) history.back();
