@@ -14,25 +14,66 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
   position: fixed; width: 100%; top: 0; left: 0; right: 0; bottom: 0; }
 
-/* Прибираємо все зверху, поле починається з самого верху */
+/* Панель керування внизу */
+#controls {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px;
+  background: #061321;
+  z-index: 50;
+}
+#controls button {
+  background: #1565c0; color: #ffffff; border: 1px solid #42a5f5;
+  border-radius: 12px; padding: 0; font-size: 26px; cursor: pointer;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s; line-height: 1;
+}
+#controls button:active:not(:disabled) { background: #1976d2; }
+#controls button:disabled { opacity: .35; }
+#controls .save { background: #ffc107; color: #000; border-color: #ffca28; font-size: 26px; }
+#controls .save:active:not(:disabled) { background: #ffca28; }
+#controls .close {
+  background: #455a64; border-color: #607d8b;
+  font-size: 12px; font-weight: bold; letter-spacing: 1px;
+  width: auto; padding: 0 14px; height: 52px;
+}
+#step-indicator { font-size: 20px; font-weight: bold; color: #64b5f6;
+  min-width: 30px; text-align: center; }
+
+/* Область майданчика */
 #board-view {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Майданчик розтягнутий на всю висоту і ширину */
-#field-wrap {
-  position: absolute;
-  top: 0; bottom: 0; left: 0; right: 0;
-  padding: 8px;
+/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо */
+#field-outer {
+  position: relative;
+  aspect-ratio: 1 / 2;
+  height: calc(100% - 30px);
+  width: auto;
+  max-width: calc(100% - 30px);
+  padding: 15px;
   background: #a8dadc;
+  border-radius: 8px;
+  box-sizing: border-box;
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
+  align-items: center;
+  justify-content: center;
 }
+
+/* Сам майданчик */
 #field {
   position: relative;
   width: 100%;
@@ -43,16 +84,13 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   background-repeat: no-repeat;
   background-position: center;
   border: none;
-  border-radius: 0;
+  border-radius: 4px;
   overflow: visible;
 }
 
+/* Фішки: розмір у пікселях, встановлюється через JS */
 .piece {
   position: absolute;
-  width: 8%;
-  height: 5.3%;
-  margin-left: -4%;
-  margin-top: -2.65%;
   border-radius: 50%;
   border: 2px solid #000;
   cursor: grab;
@@ -62,6 +100,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   box-shadow: 0 2px 4px rgba(0,0,0,.5);
   touch-action: none;
   z-index: 10;
+  transform: translate(-50%, -50%);
 }
 .piece:active { cursor: grabbing; z-index: 999; }
 
@@ -71,8 +110,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 .piece.gk-away { background: #1a1a1a; border-color: #555; }
 
 .piece.ball {
-  width: 7%; height: 4.7%;
-  margin-left: -3.5%; margin-top: -2.35%;
   border: 2px solid #111;
   border-radius: 50%;
   z-index: 20;
@@ -107,42 +144,14 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 
 .piece.animated { transition: left 1.2s ease-in-out, top 1.2s ease-in-out; }
 
-/* Кнопки внизу */
-#controls {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px;
-  background: #061321;
-  flex-wrap: nowrap;
-}
-#controls button {
-  background: #1565c0; color: #ffffff; border: 1px solid #42a5f5;
-  border-radius: 12px; padding: 0; font-size: 30px; cursor: pointer;
-  width: 56px; height: 56px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s; line-height: 1;
-}
-#controls button:active:not(:disabled) { background: #1976d2; }
-#controls button:disabled { opacity: .35; }
-#controls .save { background: #ffc107; color: #000; border-color: #ffca28; font-size: 30px; }
-#controls .save:active:not(:disabled) { background: #ffca28; }
-#controls .close {
-  background: #455a64; border-color: #607d8b;
-  font-size: 13px; font-weight: bold; letter-spacing: 1px;
-  width: auto; padding: 0 18px; height: 56px;
-}
-#step-indicator { font-size: 22px; font-weight: bold; color: #64b5f6;
-  min-width: 34px; text-align: center; }
-
+/* Збережене */
 #saved-view {
-  position: absolute;
+  position: fixed;
   top: 0; left: 0; right: 0;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto; padding: 12px; display: none;
+  background: #0a1929;
+  z-index: 40;
 }
 #saved-view.show { display: block; }
 .saved-item { background: #0d2137; border: 1px solid #2196f3; border-radius: 10px;
@@ -153,6 +162,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 .saved-item button { background: #1565c0; border: none; color: #fff;
   border-radius: 8px; padding: 8px 12px; cursor: pointer; }
 
+/* Модалка збереження */
 #save-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,.7); display: none;
   align-items: center; justify-content: center; z-index: 100; }
@@ -174,7 +184,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 <body>
 
 <div id="board-view">
-  <div id="field-wrap">
+  <div id="field-outer">
     <div id="field"></div>
   </div>
 </div>
@@ -221,16 +231,28 @@ var frames = [];
 var currentFrame = 0;
 var isAnimating = false;
 var field = document.getElementById("field");
+var fieldOuter = document.getElementById("field-outer");
 
 var ANIM_DURATION = 1200;
 var PLAY_PAUSE = 1400;
 
-// Дозволяємо фішкам виходити за межі поля на половину
-// (мінус — за лівий/верхній край, плюс — за правий/нижній)
-var OFFSET_LIMIT = 5;   // % за межі поля
+// Межі, за які можна заводити фішки (у % від поля)
+// 0 = самий край майданчика. -3 = трохи за межами (в зону).
+var OFFSET_LIMIT = 4;
+
+var PIECE_SIZE_PX = 32;
+var BALL_SIZE_PX = 28;
+
+function updatePieceSizes() {
+  // Розмір фішки — 8% від ширини майданчика
+  var fieldWidth = field.offsetWidth;
+  PIECE_SIZE_PX = Math.max(18, Math.round(fieldWidth * 0.08));
+  BALL_SIZE_PX = Math.max(14, Math.round(fieldWidth * 0.065));
+}
 
 function render() {
   field.innerHTML = "";
+  updatePieceSizes();
   for (var i = 0; i < pieces.length; i++) {
     var p = pieces[i];
     var el = document.createElement("div");
@@ -238,6 +260,9 @@ function render() {
     el.setAttribute("data-id", p.id);
     el.style.left = p.x + "%";
     el.style.top = p.y + "%";
+    var size = (p.team === "ball") ? BALL_SIZE_PX : PIECE_SIZE_PX;
+    el.style.width = size + "px";
+    el.style.height = size + "px";
     field.appendChild(el);
     makeDraggable(el, p);
   }
@@ -272,7 +297,7 @@ function makeDraggable(el, piece) {
     var dy = ((pt.y - sy) / r.height) * 100;
     if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) moved = true;
 
-    // Фішки можуть виходити за межі поля на OFFSET_LIMIT %
+    // Фішки можуть заходити за межі майданчика трохи
     var minX = -OFFSET_LIMIT, maxX = 100 + OFFSET_LIMIT;
     var minY = -OFFSET_LIMIT, maxY = 100 + OFFSET_LIMIT;
 
@@ -407,33 +432,31 @@ document.getElementById("save-ok").onclick = function() {
   alert("Збережено: " + name);
 };
 
-// Кнопка НАЗАД — закриває WebApp у Telegram
+// Telegram init
 if (window.Telegram && Telegram.WebApp) {
   var tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
-
-  // Розгорнути на весь екран
   if (tg.requestFullscreen) { try { tg.requestFullscreen(); } catch (e) {} }
-  if (tg.setHeaderColor) tg.setHeaderColor("#061321");
+  if (tg.setHeaderColor) tg.setHeaderColor("#0a1929");
   if (tg.setBackgroundColor) tg.setBackgroundColor("#0a1929");
   if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-  if (tg.enableClosingConfirmation) { /* ні */ }
-
-  // ПРИБИРАЄМО кнопку «Закрити ✕» зверху зліва
-  if (tg.BackButton && tg.BackButton.hide) {
-    tg.BackButton.hide();
-  }
-  // ПРИБИРАЄМО верхню праву панель (стрілка + три точки)
-  // Встановлюємо порожній заголовок, щоб не показувати панель
-  if (tg.setHeaderColor) tg.setHeaderColor("#0a1929");
-
+  if (tg.BackButton && tg.BackButton.hide) tg.BackButton.hide();
   document.getElementById("btn-close").onclick = function() { tg.close(); };
 } else {
   document.getElementById("btn-close").onclick = function() {
     if (history.length > 1) history.back();
   };
 }
+
+// Перерахувати розміри при зміні орієнтації
+window.addEventListener("resize", function() {
+  updatePieceSizes();
+  render();
+});
+window.addEventListener("orientationchange", function() {
+  setTimeout(function() { updatePieceSizes(); render(); }, 300);
+});
 
 pieces = clone(INITIAL);
 frames = [clone(INITIAL)];
