@@ -44,7 +44,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 #step-indicator { font-size: 20px; font-weight: bold; color: #64b5f6;
   min-width: 30px; text-align: center; }
 
-/* Область майданчика — майданчик зміщений вниз */
 #board-view {
   position: fixed;
   top: 0;
@@ -52,12 +51,11 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   right: 0;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   display: flex;
-  align-items: flex-end;      /* ← притискаємо майданчик до низу */
+  align-items: flex-end;
   justify-content: center;
-  padding-bottom: 6px;         /* ← невеликий відступ від кнопок */
+  padding-bottom: 6px;
 }
 
-/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо */
 #field-outer {
   position: relative;
   aspect-ratio: 1 / 2;
@@ -350,9 +348,10 @@ function updateControls() {
   document.getElementById("step-indicator").textContent = currentFrame;
   document.getElementById("btn-back").disabled = currentFrame <= 0;
   document.getElementById("btn-fwd").disabled = false;
-  document.getElementById("btn-play").disabled = frames.length < 2;
+  document.getElementById("btn-play").disabled = currentFrame < 1;
 }
 
+// ⏪ НАЗАД — видаляє поточний кадр і повертає на попередній
 document.getElementById("btn-back").onclick = function() {
   if (currentFrame <= 0) return;
   frames.splice(currentFrame, 1);
@@ -366,27 +365,50 @@ document.getElementById("btn-back").onclick = function() {
   render();
 };
 
+// ⏩ ВПЕРЕД — створює новий кадр (копію поточного).
+// Якщо це вже не перший кадр — автоматично запускає анімацію 1 → 2.
 document.getElementById("btn-fwd").onclick = function() {
+  if (isAnimating) return;
+
+  // Якщо ми не на останньому кадрі — обрізаємо все після поточного
   if (currentFrame < frames.length - 1) {
     frames = frames.slice(0, currentFrame + 1);
   }
+
+  // Фіксуємо поточний кадр (щоб зберегти рухи в ньому)
   frames[currentFrame] = clone(pieces);
+
+  // Створюємо новий кадр (копію поточного)
   frames.push(clone(pieces));
   currentFrame = frames.length - 1;
   updateControls();
+
+  // Якщо новий кадр — це кадр 2 або більше, автоматично програємо
+  // анімацію з кадру 1 до поточного
+  if (currentFrame >= 2) {
+    autoPlayFrom1To(currentFrame);
+  }
 };
 
-document.getElementById("btn-play").onclick = function() {
+// Автоматична анімація з кадру 1 до вказаного кадру
+function autoPlayFrom1To(endIdx) {
   if (isAnimating) return;
   var startIdx = 1;
-  var endIdx = frames.length - 1;
-  if (endIdx < startIdx) return;
+  if (endIdx <= startIdx) return;
 
-  goto(startIdx, false);
+  isAnimating = true;
+
+  // Переходимо на кадр 1
+  pieces = clone(frames[startIdx]);
+  render();
+  currentFrame = startIdx;
+  updateControls();
+
+  // Потім анімовано рухаємось до endIdx
   var i = startIdx + 1;
-
   function step() {
     if (i > endIdx) {
+      isAnimating = false;
       return;
     }
     goto(i, true);
@@ -394,6 +416,14 @@ document.getElementById("btn-play").onclick = function() {
     setTimeout(step, PLAY_PAUSE);
   }
   setTimeout(step, 400);
+}
+
+// ▶ ПЛЕЙ — програє з кадру 1 до останнього кадру
+document.getElementById("btn-play").onclick = function() {
+  if (isAnimating) return;
+  var endIdx = frames.length - 1;
+  if (endIdx < 1) return;
+  autoPlayFrom1To(endIdx);
 };
 
 document.getElementById("btn-save").onclick = function() {
