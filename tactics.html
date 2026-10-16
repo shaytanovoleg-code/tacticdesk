@@ -231,13 +231,15 @@ var ANIM_DURATION = 1200;
 var PLAY_PAUSE = 1400;
 var OFFSET_LIMIT = 4;
 
-var PIECE_SIZE_PX = 32;
-var BALL_SIZE_PX = 28;
+var PIECE_SIZE_PX = 40;
+var BALL_SIZE_PX = 36;
 
 function updatePieceSizes() {
   var fieldWidth = field.offsetWidth;
-  PIECE_SIZE_PX = Math.max(16, Math.round(fieldWidth * 0.075));
-  BALL_SIZE_PX = Math.max(13, Math.round(fieldWidth * 0.06));
+  // Фішки — 12% від ширини поля (було 7.5%). Мінімум 26px.
+  PIECE_SIZE_PX = Math.max(26, Math.round(fieldWidth * 0.12));
+  // М'яч — 9.5% від ширини поля. Мінімум 22px.
+  BALL_SIZE_PX = Math.max(22, Math.round(fieldWidth * 0.095));
 }
 
 function render() {
@@ -351,7 +353,6 @@ function updateControls() {
   document.getElementById("btn-play").disabled = frames.length < 2;
 }
 
-// ⏪ НАЗАД — видаляє поточний кадр і повертає на попередній
 document.getElementById("btn-back").onclick = function() {
   if (currentFrame <= 0) return;
   frames.splice(currentFrame, 1);
@@ -365,26 +366,17 @@ document.getElementById("btn-back").onclick = function() {
   render();
 };
 
-// ⏩ ВПЕРЕД — створює новий кадр (копію поточного).
-// Анімація НЕ запускається автоматично.
 document.getElementById("btn-fwd").onclick = function() {
   if (isAnimating) return;
-
-  // Якщо ми не на останньому кадрі — обрізаємо все після поточного
   if (currentFrame < frames.length - 1) {
     frames = frames.slice(0, currentFrame + 1);
   }
-
-  // Фіксуємо поточний кадр (щоб зберегти рухи в ньому)
   frames[currentFrame] = clone(pieces);
-
-  // Створюємо новий кадр (копію поточного)
   frames.push(clone(pieces));
   currentFrame = frames.length - 1;
   updateControls();
 };
 
-// ▶ ПЛЕЙ — програє з кадру 1 до останнього кадру
 document.getElementById("btn-play").onclick = function() {
   if (isAnimating) return;
   var startIdx = 1;
@@ -393,13 +385,11 @@ document.getElementById("btn-play").onclick = function() {
 
   isAnimating = true;
 
-  // Переходимо на кадр 1 (початок комбінації)
   pieces = clone(frames[startIdx]);
   render();
   currentFrame = startIdx;
   updateControls();
 
-  // Анімовано рухаємось до кінця
   var i = startIdx + 1;
   function step() {
     if (i > endIdx) {
