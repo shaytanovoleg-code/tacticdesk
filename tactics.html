@@ -348,7 +348,7 @@ function updateControls() {
   document.getElementById("step-indicator").textContent = currentFrame;
   document.getElementById("btn-back").disabled = currentFrame <= 0;
   document.getElementById("btn-fwd").disabled = false;
-  document.getElementById("btn-play").disabled = currentFrame < 1;
+  document.getElementById("btn-play").disabled = frames.length < 2;
 }
 
 // ⏪ НАЗАД — видаляє поточний кадр і повертає на попередній
@@ -366,7 +366,7 @@ document.getElementById("btn-back").onclick = function() {
 };
 
 // ⏩ ВПЕРЕД — створює новий кадр (копію поточного).
-// Якщо це вже не перший кадр — автоматично запускає анімацію 1 → 2.
+// Анімація НЕ запускається автоматично.
 document.getElementById("btn-fwd").onclick = function() {
   if (isAnimating) return;
 
@@ -382,29 +382,24 @@ document.getElementById("btn-fwd").onclick = function() {
   frames.push(clone(pieces));
   currentFrame = frames.length - 1;
   updateControls();
-
-  // Якщо новий кадр — це кадр 2 або більше, автоматично програємо
-  // анімацію з кадру 1 до поточного
-  if (currentFrame >= 2) {
-    autoPlayFrom1To(currentFrame);
-  }
 };
 
-// Автоматична анімація з кадру 1 до вказаного кадру
-function autoPlayFrom1To(endIdx) {
+// ▶ ПЛЕЙ — програє з кадру 1 до останнього кадру
+document.getElementById("btn-play").onclick = function() {
   if (isAnimating) return;
   var startIdx = 1;
-  if (endIdx <= startIdx) return;
+  var endIdx = frames.length - 1;
+  if (endIdx < startIdx) return;
 
   isAnimating = true;
 
-  // Переходимо на кадр 1
+  // Переходимо на кадр 1 (початок комбінації)
   pieces = clone(frames[startIdx]);
   render();
   currentFrame = startIdx;
   updateControls();
 
-  // Потім анімовано рухаємось до endIdx
+  // Анімовано рухаємось до кінця
   var i = startIdx + 1;
   function step() {
     if (i > endIdx) {
@@ -416,14 +411,6 @@ function autoPlayFrom1To(endIdx) {
     setTimeout(step, PLAY_PAUSE);
   }
   setTimeout(step, 400);
-}
-
-// ▶ ПЛЕЙ — програє з кадру 1 до останнього кадру
-document.getElementById("btn-play").onclick = function() {
-  if (isAnimating) return;
-  var endIdx = frames.length - 1;
-  if (endIdx < 1) return;
-  autoPlayFrom1To(endIdx);
 };
 
 document.getElementById("btn-save").onclick = function() {
