@@ -85,7 +85,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   overflow: visible;
 }
 
-/* Фішки — об'ємні, як справжні шашки */
 .piece {
   position: absolute;
   border-radius: 50%;
@@ -102,9 +101,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
     0 1px 2px rgba(0,0,0,.4),
     inset 0 -3px 6px rgba(0,0,0,.35),
     inset 0 3px 6px rgba(255,255,255,.55);
-  position: relative;
 }
-/* Верхній блиск для об'єму */
 .piece::before {
   content: "";
   position: absolute;
@@ -120,7 +117,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 }
 .piece:active { cursor: grabbing; z-index: 999; }
 
-/* Градієнти для кожної команди — створюють об'єм */
 .piece.home {
   background: radial-gradient(circle at 35% 30%,
     #fff6b0 0%,
@@ -147,14 +143,13 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   border-color: #666;
 }
 
-/* М'яч — ЕМОДЖІ ⚽ */
 .piece.ball {
   width: auto !important;
   height: auto !important;
   border: none;
   background: transparent;
   box-shadow: none;
-  font-size: 28px;
+  font-size: 34px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -257,11 +252,11 @@ var ANIM_DURATION = 1200;
 var PLAY_PAUSE = 1400;
 var OFFSET_LIMIT = 4;
 
-var PIECE_SIZE_PX = 34;
+var PIECE_SIZE_PX = 42;
 
 function updatePieceSizes() {
   var fieldWidth = field.offsetWidth;
-  PIECE_SIZE_PX = Math.max(22, Math.round(fieldWidth * 0.098));
+  PIECE_SIZE_PX = Math.max(28, Math.round(fieldWidth * 0.12));
 }
 
 function render() {
@@ -275,10 +270,8 @@ function render() {
     el.style.left = p.x + "%";
     el.style.top = p.y + "%";
     if (p.team === "ball") {
-      // М'яч — емодзі ⚽
       el.textContent = "⚽";
-      // Розмір шрифту залежить від ширини поля
-      el.style.fontSize = Math.max(20, Math.round(field.offsetWidth * 0.09)) + "px";
+      el.style.fontSize = Math.max(24, Math.round(field.offsetWidth * 0.11)) + "px";
     } else {
       var size = PIECE_SIZE_PX;
       el.style.width = size + "px";
