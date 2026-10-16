@@ -14,7 +14,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
   position: fixed; width: 100%; top: 0; left: 0; right: 0; bottom: 0; }
 
-/* Панель керування внизу */
 #controls {
   position: fixed;
   bottom: 0; left: 0; right: 0;
@@ -57,13 +56,14 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   justify-content: center;
 }
 
-/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо */
+/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо.
+   Зменшено: тепер займає 85% доступної висоти замість 100%. */
 #field-outer {
   position: relative;
   aspect-ratio: 1 / 2;
-  height: calc(100% - 30px);
+  height: calc(85% - 30px);
   width: auto;
-  max-width: calc(100% - 30px);
+  max-width: calc(85% - 30px);
   padding: 15px;
   background: #a8dadc;
   border-radius: 8px;
@@ -73,7 +73,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   justify-content: center;
 }
 
-/* Сам майданчик */
 #field {
   position: relative;
   width: 100%;
@@ -88,7 +87,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   overflow: visible;
 }
 
-/* Фішки: розмір у пікселях, встановлюється через JS */
 .piece {
   position: absolute;
   border-radius: 50%;
@@ -144,7 +142,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 
 .piece.animated { transition: left 1.2s ease-in-out, top 1.2s ease-in-out; }
 
-/* Збережене */
 #saved-view {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -162,7 +159,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 .saved-item button { background: #1565c0; border: none; color: #fff;
   border-radius: 8px; padding: 8px 12px; cursor: pointer; }
 
-/* Модалка збереження */
 #save-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,.7); display: none;
   align-items: center; justify-content: center; z-index: 100; }
@@ -235,19 +231,15 @@ var fieldOuter = document.getElementById("field-outer");
 
 var ANIM_DURATION = 1200;
 var PLAY_PAUSE = 1400;
-
-// Межі, за які можна заводити фішки (у % від поля)
-// 0 = самий край майданчика. -3 = трохи за межами (в зону).
 var OFFSET_LIMIT = 4;
 
 var PIECE_SIZE_PX = 32;
 var BALL_SIZE_PX = 28;
 
 function updatePieceSizes() {
-  // Розмір фішки — 8% від ширини майданчика
   var fieldWidth = field.offsetWidth;
-  PIECE_SIZE_PX = Math.max(18, Math.round(fieldWidth * 0.08));
-  BALL_SIZE_PX = Math.max(14, Math.round(fieldWidth * 0.065));
+  PIECE_SIZE_PX = Math.max(16, Math.round(fieldWidth * 0.075));
+  BALL_SIZE_PX = Math.max(13, Math.round(fieldWidth * 0.06));
 }
 
 function render() {
@@ -297,7 +289,6 @@ function makeDraggable(el, piece) {
     var dy = ((pt.y - sy) / r.height) * 100;
     if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) moved = true;
 
-    // Фішки можуть заходити за межі майданчика трохи
     var minX = -OFFSET_LIMIT, maxX = 100 + OFFSET_LIMIT;
     var minY = -OFFSET_LIMIT, maxY = 100 + OFFSET_LIMIT;
 
@@ -432,7 +423,6 @@ document.getElementById("save-ok").onclick = function() {
   alert("Збережено: " + name);
 };
 
-// Telegram init
 if (window.Telegram && Telegram.WebApp) {
   var tg = Telegram.WebApp;
   tg.ready();
@@ -449,7 +439,6 @@ if (window.Telegram && Telegram.WebApp) {
   };
 }
 
-// Перерахувати розміри при зміні орієнтації
 window.addEventListener("resize", function() {
   updatePieceSizes();
   render();
