@@ -231,15 +231,13 @@ var ANIM_DURATION = 1200;
 var PLAY_PAUSE = 1400;
 var OFFSET_LIMIT = 4;
 
-var PIECE_SIZE_PX = 40;
-var BALL_SIZE_PX = 36;
+var PIECE_SIZE_PX = 34;
+var BALL_SIZE_PX = 30;
 
 function updatePieceSizes() {
   var fieldWidth = field.offsetWidth;
-  // Фішки — 12% від ширини поля (було 7.5%). Мінімум 26px.
-  PIECE_SIZE_PX = Math.max(26, Math.round(fieldWidth * 0.12));
-  // М'яч — 9.5% від ширини поля. Мінімум 22px.
-  BALL_SIZE_PX = Math.max(22, Math.round(fieldWidth * 0.095));
+  PIECE_SIZE_PX = Math.max(22, Math.round(fieldWidth * 0.098));
+  BALL_SIZE_PX = Math.max(19, Math.round(fieldWidth * 0.078));
 }
 
 function render() {
