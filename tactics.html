@@ -44,7 +44,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 #step-indicator { font-size: 20px; font-weight: bold; color: #64b5f6;
   min-width: 30px; text-align: center; }
 
-/* Область майданчика */
+/* Область майданчика — майданчик зміщений вниз */
 #board-view {
   position: fixed;
   top: 0;
@@ -52,12 +52,12 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   right: 0;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   display: flex;
-  align-items: center;
+  align-items: flex-end;      /* ← притискаємо майданчик до низу */
   justify-content: center;
+  padding-bottom: 6px;         /* ← невеликий відступ від кнопок */
 }
 
-/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо.
-   Зменшено: тепер займає 85% доступної висоти замість 100%. */
+/* Контейнер майданчика з пропорцією 1:2 і однаковою зоною навколо */
 #field-outer {
   position: relative;
   aspect-ratio: 1 / 2;
