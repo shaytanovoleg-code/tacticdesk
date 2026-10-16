@@ -85,6 +85,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   overflow: visible;
 }
 
+/* Фішки — об'ємні, як справжні шашки */
 .piece {
   position: absolute;
   border-radius: 50%;
@@ -93,50 +94,75 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,.5);
   touch-action: none;
   z-index: 10;
   transform: translate(-50%, -50%);
+  box-shadow:
+    0 3px 6px rgba(0,0,0,.55),
+    0 1px 2px rgba(0,0,0,.4),
+    inset 0 -3px 6px rgba(0,0,0,.35),
+    inset 0 3px 6px rgba(255,255,255,.55);
+  position: relative;
+}
+/* Верхній блиск для об'єму */
+.piece::before {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: 15%;
+  width: 55%;
+  height: 35%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(255,255,255,.85) 0%,
+    rgba(255,255,255,0) 70%);
+  pointer-events: none;
 }
 .piece:active { cursor: grabbing; z-index: 999; }
 
-.piece.home    { background: #facc15; }
-.piece.gk-home { background: #2563eb; }
-.piece.away    { background: #dc2626; }
-.piece.gk-away { background: #1a1a1a; border-color: #555; }
+/* Градієнти для кожної команди — створюють об'єм */
+.piece.home {
+  background: radial-gradient(circle at 35% 30%,
+    #fff6b0 0%,
+    #facc15 45%,
+    #d4a209 100%);
+}
+.piece.gk-home {
+  background: radial-gradient(circle at 35% 30%,
+    #8bb4ff 0%,
+    #2563eb 45%,
+    #153d9c 100%);
+}
+.piece.away {
+  background: radial-gradient(circle at 35% 30%,
+    #ff8b8b 0%,
+    #dc2626 45%,
+    #8f1414 100%);
+}
+.piece.gk-away {
+  background: radial-gradient(circle at 35% 30%,
+    #6a6a6a 0%,
+    #2a2a2a 45%,
+    #000000 100%);
+  border-color: #666;
+}
 
+/* М'яч — ЕМОДЖІ ⚽ */
 .piece.ball {
-  border: 2px solid #111;
-  border-radius: 50%;
+  width: auto !important;
+  height: auto !important;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 20;
-  overflow: hidden;
-  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0f0f0 55%, #d0d0d0 100%);
-  box-shadow: 0 2px 4px rgba(0,0,0,.55), inset -2px -2px 4px rgba(0,0,0,.15);
+  padding: 0;
 }
-.piece.ball::before {
-  content: "";
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 34%; height: 34%;
-  background: #111;
-  transform: translate(-50%, -50%);
-  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-}
-.piece.ball::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle 7% at 50% 8%,  #111 100%, transparent 101%),
-    radial-gradient(circle 7% at 50% 92%, #111 100%, transparent 101%),
-    radial-gradient(circle 7% at 8% 50%,  #111 100%, transparent 101%),
-    radial-gradient(circle 7% at 92% 50%, #111 100%, transparent 101%),
-    radial-gradient(circle 6% at 22% 22%, #111 100%, transparent 101%),
-    radial-gradient(circle 6% at 78% 22%, #111 100%, transparent 101%),
-    radial-gradient(circle 6% at 22% 78%, #111 100%, transparent 101%),
-    radial-gradient(circle 6% at 78% 78%, #111 100%, transparent 101%);
-  pointer-events: none;
-}
+.piece.ball::before { display: none; }
 
 .piece.animated { transition: left 1.2s ease-in-out, top 1.2s ease-in-out; }
 
@@ -232,12 +258,10 @@ var PLAY_PAUSE = 1400;
 var OFFSET_LIMIT = 4;
 
 var PIECE_SIZE_PX = 34;
-var BALL_SIZE_PX = 30;
 
 function updatePieceSizes() {
   var fieldWidth = field.offsetWidth;
   PIECE_SIZE_PX = Math.max(22, Math.round(fieldWidth * 0.098));
-  BALL_SIZE_PX = Math.max(19, Math.round(fieldWidth * 0.078));
 }
 
 function render() {
@@ -250,9 +274,16 @@ function render() {
     el.setAttribute("data-id", p.id);
     el.style.left = p.x + "%";
     el.style.top = p.y + "%";
-    var size = (p.team === "ball") ? BALL_SIZE_PX : PIECE_SIZE_PX;
-    el.style.width = size + "px";
-    el.style.height = size + "px";
+    if (p.team === "ball") {
+      // М'яч — емодзі ⚽
+      el.textContent = "⚽";
+      // Розмір шрифту залежить від ширини поля
+      el.style.fontSize = Math.max(20, Math.round(field.offsetWidth * 0.09)) + "px";
+    } else {
+      var size = PIECE_SIZE_PX;
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+    }
     field.appendChild(el);
     makeDraggable(el, p);
   }
