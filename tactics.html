@@ -14,6 +14,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
   position: fixed; width: 100%; top: 0; left: 0; right: 0; bottom: 0; }
 
+/* Панель керування */
 #controls {
   position: fixed;
   bottom: 0; left: 0; right: 0;
@@ -25,22 +26,72 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   background: #061321;
   z-index: 50;
 }
+
+/* Об'ємні кнопки */
 #controls button {
-  background: #1565c0; color: #ffffff; border: 1px solid #42a5f5;
-  border-radius: 12px; padding: 0; font-size: 26px; cursor: pointer;
-  width: 52px; height: 52px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s; line-height: 1;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  font-size: 26px;
+  cursor: pointer;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all .1s;
+  position: relative;
+  box-shadow:
+    0 4px 0 rgba(0,0,0,.45),      /* тінь під кнопкою */
+    0 6px 8px rgba(0,0,0,.35),     /* м'яка тінь */
+    inset 0 2px 4px rgba(255,255,255,.4),   /* верхній блиск */
+    inset 0 -2px 4px rgba(0,0,0,.25);       /* нижня тінь */
 }
-#controls button:active:not(:disabled) { background: #1976d2; }
-#controls button:disabled { opacity: .35; }
-#controls .save { background: #ffc107; color: #000; border-color: #ffca28; font-size: 26px; }
-#controls .save:active:not(:disabled) { background: #ffca28; }
+#controls button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(0,0,0,.45),
+    0 2px 3px rgba(0,0,0,.35),
+    inset 0 2px 4px rgba(255,255,255,.3),
+    inset 0 -2px 4px rgba(0,0,0,.25);
+}
+#controls button:disabled {
+  opacity: .35;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Кнопка НАЗАД (⏪) — синя */
+#btn-back {
+  background: linear-gradient(180deg, #4a90e2 0%, #1565c0 100%);
+}
+/* Кнопка ПЛЕЙ (▶) — зелена */
+#btn-play {
+  background: linear-gradient(180deg, #4caf50 0%, #2e7d32 100%);
+}
+/* Кнопка ВПЕРЕД (⏩) — синя */
+#btn-fwd {
+  background: linear-gradient(180deg, #4a90e2 0%, #1565c0 100%);
+}
+/* Кнопка ЗБЕРЕГТИ (💾) — жовта */
+#controls .save {
+  background: linear-gradient(180deg, #ffd54f 0%, #ffc107 100%);
+  color: #000;
+  font-size: 26px;
+}
+/* Кнопка ЗАКРИТИ — сіра */
 #controls .close {
-  background: #455a64; border-color: #607d8b;
-  font-size: 12px; font-weight: bold; letter-spacing: 1px;
-  width: auto; padding: 0 14px; height: 52px;
+  background: linear-gradient(180deg, #78909c 0%, #455a64 100%);
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  width: auto;
+  padding: 0 14px;
+  height: 52px;
 }
+
 #step-indicator { font-size: 20px; font-weight: bold; color: #64b5f6;
   min-width: 30px; text-align: center; }
 
@@ -85,6 +136,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   overflow: visible;
 }
 
+/* Фішки — об'ємні */
 .piece {
   position: absolute;
   border-radius: 50%;
@@ -143,6 +195,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   border-color: #666;
 }
 
+/* М'яч — емодзі ⚽ */
 .piece.ball {
   width: auto !important;
   height: auto !important;
@@ -156,6 +209,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
   justify-content: center;
   z-index: 20;
   padding: 0;
+  text-shadow: 0 2px 3px rgba(0,0,0,.5);
 }
 .piece.ball::before { display: none; }
 
@@ -172,11 +226,13 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 #saved-view.show { display: block; }
 .saved-item { background: #0d2137; border: 1px solid #2196f3; border-radius: 10px;
   padding: 12px; margin-bottom: 10px;
-  display: flex; justify-content: space-between; align-items: center; }
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 3px 6px rgba(0,0,0,.4); }
 .saved-item .name { font-weight: bold; color: #e3f2fd; }
 .saved-item .meta { font-size: 12px; color: #64b5f6; }
-.saved-item button { background: #1565c0; border: none; color: #fff;
-  border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.saved-item button { background: linear-gradient(180deg, #4a90e2 0%, #1565c0 100%);
+  border: none; color: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,.4); }
 
 #save-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,.7); display: none;
@@ -184,16 +240,18 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
 #save-modal.show { display: flex; }
 .modal { background: #0d2137; padding: 20px; border-radius: 14px;
   width: 84%; max-width: 340px; text-align: center;
-  border: 1px solid #2196f3; }
+  border: 1px solid #2196f3;
+  box-shadow: 0 10px 30px rgba(0,0,0,.7); }
 .modal h3 { margin: 0 0 14px; color: #e3f2fd; }
 .modal input { width: 100%; padding: 10px; border-radius: 8px;
   border: 1px solid #2196f3; background: #061321; color: #fff;
   font-size: 15px; margin-bottom: 12px; }
 .modal .row { display: flex; gap: 8px; }
 .modal button { flex: 1; padding: 10px; border-radius: 8px; border: none;
-  font-size: 15px; font-weight: bold; cursor: pointer; }
-.modal .ok { background: #1565c0; color: #fff; }
-.modal .cancel { background: #455a64; color: #fff; }
+  font-size: 15px; font-weight: bold; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.modal .ok { background: linear-gradient(180deg, #4caf50 0%, #2e7d32 100%); color: #fff; }
+.modal .cancel { background: linear-gradient(180deg, #78909c 0%, #455a64 100%); color: #fff; }
 </style>
 </head>
 <body>
